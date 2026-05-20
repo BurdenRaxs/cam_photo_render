@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>哈院停车位状态</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f1115; color: #fff;
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+      padding: 20px 16px; min-height: 100vh;
+    }
+    h1 {
+      font-size: 20px; font-weight: 600; text-align: center;
+      margin-bottom: 20px; color: #e0e0e0;
+    }
+    .card {
+      background: #1a1d24; border-radius: 12px; overflow: hidden;
+      margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .card-title {
+      padding: 10px 14px; font-size: 14px; color: #8b8fa3;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .card img {
+      width: 100%; height: auto; display: block;
+      object-fit: cover;
+    }
+    .empty {
+      text-align: center; padding: 60px 20px; color: #555; font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>哈院停车位状态</h1>
+  <div id="gallery"></div>
+  <div id="empty" class="empty" style="display:none">未提供图片参数</div>
+
+  <script>
+    (async () => {
+      const gallery = document.getElementById('gallery');
+      const empty = document.getElementById('empty');
+      const params = new URLSearchParams(location.search);
+
+      // 支持 d 参数: gzip压缩+base64编码的数据
+      if (params.has('d')) {
+        try {
+          const raw = atob(decodeURIComponent(params.get('d')));
+          const bytes = Uint8Array.from(raw, c => c.charCodeAt(0));
+          const ds = new DecompressionStream('gzip');
+          const writer = ds.writable.getWriter();
+          writer.write(bytes);
+          writer.close();
+          const reader = ds.readable.getReader();
+          const chunks = [];
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+          }
+          const total = chunks.reduce((s, c) => s + c.length, 0);
+          const buf = new Uint8Array(total);
+          let off = 0;
+          for (const c of chunks) { buf.set(c, off); off += c.length; }
+          const json = new TextDecoder().decode(buf);
+          const imgs = JSON.parse(json);
+          imgs.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<div class="card-title">${item.name}</div><img src="${item.url}" alt="${item.name}">`;
+            gallery.appendChild(card);
+          });
+        } catch (e) {
+          empty.textContent = '数据解析失败: ' + e.message;
+          empty.style.display = 'block';
+        }
+        return;
+      }
+
+      // 支持 img1/img2... 参数: 直接传URL
+      const imgs = [];
+      for (const [k, v] of params.entries()) {
+        if (k.startsWith('img')) imgs.push({ name: k, url: v });
+      }
+      if (imgs.length === 0) {
+        empty.style.display = 'block';
+      } else {
+        imgs.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `<div class="card-title">${item.name}</div><img src="${item.url}" alt="${item.name}">`;
+          gallery.appendChild(card);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
