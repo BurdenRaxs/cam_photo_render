@@ -9,7 +9,10 @@
     body {
       background: #0f1115; color: #fff;
       font-family: -apple-system, 'Helvetica Neue', sans-serif;
-      padding: 20px 16px; min-height: 100vh;
+      display: flex; justify-content: center; min-height: 100vh;
+    }
+    .container {
+      width: 100%; max-width: 640px; padding: 20px 16px;
     }
     h1 {
       font-size: 20px; font-weight: 600; text-align: center;
@@ -25,7 +28,8 @@
     }
     .card img {
       width: 100%; height: auto; display: block;
-      object-fit: cover;
+      max-width: 640px; max-height: 360px;
+      object-fit: cover; aspect-ratio: 16/9;
     }
     .empty {
       text-align: center; padding: 60px 20px; color: #555; font-size: 14px;
@@ -33,9 +37,11 @@
   </style>
 </head>
 <body>
-  <h1>哈院停车位状态</h1>
-  <div id="gallery"></div>
-  <div id="empty" class="empty" style="display:none">未提供图片参数</div>
+  <div class="container">
+    <h1>哈院停车位状态</h1>
+    <div id="gallery"></div>
+    <div id="empty" class="empty" style="display:none">未提供图片参数</div>
+  </div>
 
   <script>
     (async () => {
